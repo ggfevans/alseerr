@@ -1,0 +1,21 @@
+# Mac
+.DS_Store
+
+# Alfred
+prefs.plist
+*.alfredworkflow
+
+# Local config (use .env.example as template)
+.env
+
+# Node
+node_modules/
+
+# Git worktrees
+.worktree/
+
+# Documentation
+docs/reference/
+
+# Poster cache (runtime only)
+posters/

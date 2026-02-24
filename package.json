@@ -1,0 +1,13 @@
+{
+	"name": "alseerr",
+	"version": "0.1.0",
+	"private": true,
+	"description": "Seerr media search and requests for Alfred: discover, request, and track media from your homelab",
+	"scripts": {
+		"test": "node --test tests/*.test.js",
+		"postversion": "node scripts/sync-version.js && git add info.plist"
+	},
+	"engines": {
+		"node": ">=18.0.0"
+	}
+}
