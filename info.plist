@@ -250,7 +250,7 @@ Search and request media from your Seerr instance, directly from Alfred.
 ### Setup
 
 1. Set your **Seerr URL** (e.g. https://seerr.example.com)
-2. Set your **Seerr API Key** (found in Seerr Settings General)
+2. Set your **Seerr API Key** (found in Seerr &gt; Settings &gt; General)
 3. Optionally set a **Shortcut Keyword** (e.g. `sr`) in addition to `alseerr`
 4. Optionally adjust the **Timeout** (default: 5000ms)
 
@@ -343,7 +343,7 @@ Search and request media from your Seerr instance, directly from Alfred.
 				<true/>
 			</dict>
 			<key>description</key>
-			<string>Found in Seerr Settings General API Key</string>
+			<string>Found in Seerr &gt; Settings &gt; General &gt; API Key</string>
 			<key>label</key>
 			<string>Seerr API Key</string>
 			<key>type</key>
@@ -395,7 +395,7 @@ Search and request media from your Seerr instance, directly from Alfred.
 		</dict>
 	</array>
 	<key>version</key>
-	<string>0.1.0</string>
+	<string>2026.02.24</string>
 	<key>webaddress</key>
 	<string>https://github.com/ggfevans/alseerr</string>
 </dict>

@@ -23,7 +23,8 @@ jobs:
           zip "${{ env.WORKFLOW_NAME }}.alfredworkflow" \
             info.plist \
             icon.png \
-            scripts/search.js
+            scripts/search.js \
+            scripts/request.js
 
       - name: Verify bundle contents
         run: |
@@ -31,7 +32,7 @@ jobs:
           unzip -l "${{ env.WORKFLOW_NAME }}.alfredworkflow"
 
           # Verify required files exist
-          unzip -t "${{ env.WORKFLOW_NAME }}.alfredworkflow" info.plist icon.png scripts/search.js
+          unzip -t "${{ env.WORKFLOW_NAME }}.alfredworkflow" info.plist icon.png scripts/search.js scripts/request.js
 
       - name: Release
         uses: softprops/action-gh-release@v2
