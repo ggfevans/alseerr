@@ -24,6 +24,14 @@ function getEnv(name, defaultValue) {
 	}
 }
 
+function parseTimeout(value, defaultMs = 5000, maxMs = 30000) {
+	const parsed = Number.parseInt(value, 10);
+	if (Number.isNaN(parsed) || parsed <= 0) {
+		return defaultMs;
+	}
+	return Math.min(parsed, maxMs);
+}
+
 function shellEscape(str) {
 	return "'" + str.replace(/'/g, "'\\''") + "'";
 }
@@ -31,13 +39,26 @@ function shellEscape(str) {
 const CONFIG = {
 	seerrUrl: getEnv("seerr_url"),
 	apiKey: getEnv("seerr_api_key"),
+	timeoutMs: parseTimeout(getEnv("timeout_ms", "5000")),
 };
+
+// ============================================================================
+// NOTIFICATION HELPER
+// ============================================================================
+
+function notify(message, subtitle) {
+	app.displayNotification(message, {
+		withTitle: "Alseerr",
+		subtitle: subtitle || "",
+	});
+}
 
 // ============================================================================
 // MAIN
 // ============================================================================
 
-function run(argv) {
+// biome-ignore lint/correctness/noUnusedVariables: Alfred entry point
+var run = function (argv) {
 	const seerrUrl = CONFIG.seerrUrl.replace(/\/+$/, "");
 
 	// Parse the request payload from arg (passed via alt modifier)
@@ -45,10 +66,7 @@ function run(argv) {
 	try {
 		payload = JSON.parse(argv[0]);
 	} catch (e) {
-		app.displayNotification("Invalid request data", {
-			withTitle: "Alseerr",
-			subtitle: "Request failed",
-		});
+		notify("Invalid request data", "Request failed");
 		return "";
 	}
 
@@ -56,55 +74,72 @@ function run(argv) {
 	const mediaId = payload.mediaId;
 	const mediaTitle = payload.mediaTitle || "Unknown";
 	const mediaStatus = payload.mediaStatus || 0;
+
+	// Validate required fields
+	if (!mediaType || (mediaType !== "movie" && mediaType !== "tv")) {
+		notify("Invalid media type", "Expected movie or tv");
+		return "";
+	}
+	if (!mediaId) {
+		notify("Missing media ID", "Cannot submit request without ID");
+		return "";
+	}
+
 	const webUrl = `${seerrUrl}/${mediaType === "movie" ? "movie" : "tv"}/${mediaId}`;
 
 	// If already available or processing, just open in Seerr
 	if (mediaStatus >= 3) {
-		app.displayNotification(`${mediaTitle} is already ${mediaStatus === 5 ? "available" : "processing"}`, {
-			withTitle: "Alseerr",
-			subtitle: "No request needed",
-		});
+		notify(`${mediaTitle} is already ${mediaStatus === 5 ? "available" : "processing"}`, "No request needed");
 		return webUrl;
 	}
 
 	// If already pending, notify
 	if (mediaStatus === 2) {
-		app.displayNotification(`${mediaTitle} is already pending approval`, {
-			withTitle: "Alseerr",
-			subtitle: "Request already submitted",
-		});
+		notify(`${mediaTitle} is already pending approval`, "Request already submitted");
 		return webUrl;
 	}
 
-	// Submit request
+	// Submit request with HTTP status detection
 	const body = JSON.stringify({
 		mediaType: mediaType,
 		mediaId: Number.parseInt(mediaId, 10),
 	});
 
+	const timeoutSecs = Math.ceil(CONFIG.timeoutMs / 1000);
+
 	try {
-		const curlCmd = `curl --silent --location --max-time 10 -X POST -H "X-Api-Key: ${CONFIG.apiKey}" -H "Content-Type: application/json" -d ${shellEscape(body)} -- ${shellEscape(seerrUrl + "/api/v1/request")}`;
-		const response = app.doShellScript(curlCmd);
-		const data = JSON.parse(response);
+		// Pipe API key via stdin using curl -K - to keep it out of process listing
+		const curlConfig = shellEscape(`header = "X-Api-Key: ${CONFIG.apiKey}"`);
+		const curlCmd = `echo ${curlConfig} | curl -K - --silent --location --max-time ${timeoutSecs} -w '\\n%{http_code}' -X POST -H "Content-Type: application/json" -d ${shellEscape(body)} -- ${shellEscape(seerrUrl + "/api/v1/request")}`;
+		const raw = app.doShellScript(curlCmd);
+
+		// Split response body from HTTP status code
+		const lastNewline = raw.lastIndexOf("\n");
+		const responseBody = lastNewline > 0 ? raw.substring(0, lastNewline) : raw;
+		const httpStatus = lastNewline > 0 ? Number.parseInt(raw.substring(lastNewline + 1), 10) : 0;
+
+		// Handle specific HTTP errors
+		if (httpStatus === 409) {
+			notify(`${mediaTitle} was already requested`, "Duplicate request");
+			return webUrl;
+		}
+		if (httpStatus === 401 || httpStatus === 403) {
+			notify("Authentication failed", "Check your API key");
+			return webUrl;
+		}
+
+		const data = JSON.parse(responseBody);
 
 		if (data.id) {
-			app.displayNotification(`Requested: ${mediaTitle}`, {
-				withTitle: "Alseerr",
-				subtitle: `${mediaType === "movie" ? "Movie" : "TV Show"} request submitted`,
-			});
+			const typeLabel = mediaType === "movie" ? "Movie" : "TV Show (all seasons)";
+			notify(`Requested: ${mediaTitle}`, `${typeLabel} request submitted`);
 		} else if (data.message) {
-			app.displayNotification(data.message, {
-				withTitle: "Alseerr",
-				subtitle: "Request issue",
-			});
+			notify(data.message, "Request issue");
 		}
 	} catch (e) {
-		app.displayNotification(`Error: ${e.message || e}`, {
-			withTitle: "Alseerr",
-			subtitle: "Request failed",
-		});
+		notify(`Error: ${e.message || e}`, "Request failed");
 	}
 
 	// Return Seerr web URL to open after request
 	return webUrl;
-}
+};

@@ -159,8 +159,9 @@ function apiGet(endpoint, params) {
 
 	try {
 		const escapedUrl = shellEscape(url);
-		// Use -w to append HTTP status code after response body, separated by newline
-		const curlCmd = `curl --silent --location --max-time ${timeoutSecs} -w '\\n%{http_code}' -H "X-Api-Key: ${CONFIG.apiKey}" -- ${escapedUrl}`;
+		// Pipe API key via stdin using curl -K - to keep it out of process listing
+		const curlConfig = shellEscape(`header = "X-Api-Key: ${CONFIG.apiKey}"`);
+		const curlCmd = `echo ${curlConfig} | curl -K - --silent --location --max-time ${timeoutSecs} -w '\\n%{http_code}' -- ${escapedUrl}`;
 		const raw = app.doShellScript(curlCmd);
 
 		if (!raw) {
@@ -214,7 +215,9 @@ function apiPost(endpoint, body) {
 	try {
 		const escapedUrl = shellEscape(url);
 		const escapedBody = shellEscape(JSON.stringify(body));
-		const curlCmd = `curl --silent --location --max-time ${timeoutSecs} -X POST -H "X-Api-Key: ${CONFIG.apiKey}" -H "Content-Type: application/json" -d ${escapedBody} -- ${escapedUrl}`;
+		// Pipe API key via stdin using curl -K - to keep it out of process listing
+		const curlConfig = shellEscape(`header = "X-Api-Key: ${CONFIG.apiKey}"`);
+		const curlCmd = `echo ${curlConfig} | curl -K - --silent --location --max-time ${timeoutSecs} -X POST -H "Content-Type: application/json" -d ${escapedBody} -- ${escapedUrl}`;
 		const response = app.doShellScript(curlCmd);
 
 		if (!response) {
@@ -239,7 +242,7 @@ function apiPost(endpoint, body) {
 let cachedWorkflowDataDir = null;
 let cachedPosterDir = null;
 let posterFetchesThisSearch = 0;
-const MAX_POSTER_FETCHES_PER_SEARCH = 10;
+const MAX_POSTER_FETCHES_PER_SEARCH = 5;
 
 /**
  * Get the workflow data directory path.
@@ -297,8 +300,11 @@ function getPosterPath(posterPath) {
 	const safeFilename = posterPath.replace(/[^a-zA-Z0-9.-]/g, "_") + ".jpg";
 	const localPath = `${cacheDir}/${safeFilename}`;
 
-	// Check cache first
+	const failMarker = `${localPath}.fail`;
+
+	// Check cache first (success or known failure)
 	if (fileExists(localPath)) return localPath;
+	if (fileExists(failMarker)) return "icon.png";
 
 	// Limit fetches per search for responsiveness
 	if (posterFetchesThisSearch >= MAX_POSTER_FETCHES_PER_SEARCH) return "icon.png";
@@ -313,10 +319,11 @@ function getPosterPath(posterPath) {
 		const fileSize = app.doShellScript(`stat -f%z ${shellEscape(localPath)} 2>/dev/null || echo 0`);
 		if (Number.parseInt(fileSize, 10) > 0) return localPath;
 
-		app.doShellScript(`rm -f ${shellEscape(localPath)}`);
+		// Cache the failure so we don't retry on every search
+		app.doShellScript(`rm -f ${shellEscape(localPath)} && touch ${shellEscape(failMarker)}`);
 		return "icon.png";
 	} catch {
-		try { app.doShellScript(`rm -f ${shellEscape(localPath)}`); } catch { /* ignore */ }
+		try { app.doShellScript(`rm -f ${shellEscape(localPath)} && touch ${shellEscape(failMarker)}`); } catch { /* ignore */ }
 		return "icon.png";
 	}
 }
