@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Development conventions and context for AI-assisted development on this project.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
@@ -41,6 +41,7 @@ Use `just` commands to sync:
 just transfer-changes-TO-local    # Push git changes to Alfred
 just transfer-changes-FROM-local  # Pull Alfred changes to git
 just open-local-workflow-in-alfred  # Open in Alfred for visual editing
+just show-workflow-path             # Show Alfred workflow location
 ```
 
 Requires `.env` file with `WORKFLOW_UID` (copy from `.env.example`).
@@ -50,11 +51,12 @@ Requires `.env` file with `WORKFLOW_UID` (copy from `.env.example`).
 ### JXA Constraints
 
 JXA (JavaScript for Automation) runs in JavaScriptCore with ObjC bridge:
-- No `require()` or ES modules
-- No `fetch()` - use `curl` via `app.doShellScript()`
-- No `URL` constructor - use regex parsing
+- No `require()` or ES modules; each script is self-contained
+- No `fetch()`; use `curl` via `app.doShellScript()`
+- No `URL` constructor; use regex parsing
 - Global `$` and `ObjC` objects for macOS APIs
 - Entry point is `run(argv)` function
+- `doShellScript()` converts `\n` to `\r`; use text markers (e.g. `__HTTPSTATUS__`) instead of newline-based parsing
 
 ### Scripts
 
@@ -63,6 +65,8 @@ scripts/
 ├── search.js    # Script Filter: searches Seerr, returns Alfred JSON
 └── request.js   # Run Script: submits request to Seerr, shows notification
 ```
+
+Because JXA scripts can't use `require()`, pure utility functions (`shellEscape`, `truncate`, `alfredMatcher`, `extractYear`, `getMediaStatus`) are duplicated between `search.js` and `request.js`. Tests in `tests/utils.test.js` re-implement these same functions. All three copies must stay in sync.
 
 ### Workflow Variables (configured in Alfred UI)
 
@@ -77,19 +81,17 @@ scripts/
 ```
 Keyword "alseerr"
   → Script Filter (scripts/search.js)
-    → Default action: Run Script (scripts/request.js) — submits request + opens Seerr
-    → Alt action: Open URL — opens item in Seerr web UI
+    → Default action: Open URL (opens item in Seerr web UI)
+    → Alt action: Run Script (scripts/request.js, submits request + opens Seerr)
 ```
 
 ## Testing
 
-### Framework
-
-Node.js built-in test runner (`node:test`) - no external dependencies.
+Node.js built-in test runner (`node:test`), no external dependencies.
 
 ```bash
-npm test                    # Run all tests
-node --test tests/          # Direct invocation
+npm test                          # Run all tests
+node --test tests/utils.test.js   # Run a single test file
 ```
 
 ### What to Test
@@ -97,7 +99,7 @@ node --test tests/          # Direct invocation
 - **DO test:** Pure functions (`shellEscape`, `truncate`, `alfredMatcher`, `extractYear`, `getMediaStatus`)
 - **DO test:** Alfred JSON output structure
 - **DO test:** Error handling paths
-- **DON'T test:** JXA-specific code (requires macOS runtime)
+- **DON'T test:** JXA-specific code (requires macOS runtime, `ObjC` bridge, `app.doShellScript`)
 
 ## Security Considerations
 
@@ -111,7 +113,7 @@ When calling shell commands via `app.doShellScript()`:
 ### API Key Handling
 
 - API key is stored in Alfred workflow variables (encrypted at rest by Alfred)
-- Passed via `X-Api-Key` header, never in URL parameters
+- Passed via `X-Api-Key` header through a curl config temp file (`curl -K`), never in URL parameters or process arguments
 
 ## Seerr API Reference
 
@@ -122,15 +124,18 @@ When calling shell commands via `app.doShellScript()`:
 - Media status: 1=Unknown, 2=Pending, 3=Processing, 4=Partial, 5=Available
 - API docs: https://api-docs.overseerr.dev/
 
+## Version Management
+
+This project uses **CalVer** (calendar versioning) in `YYYY.MM.DD` format (e.g. `2026.02.24`). Version lives in both `package.json` and `info.plist`.
+
 ## Release Process
 
-1. Update version in `info.plist`
-2. Run `just release` to build `.alfredworkflow` bundle
-3. GitHub Actions creates release on version tag
+1. Run `just release` (prompts for version, updates both plists, commits, tags with `v` prefix, pushes)
+2. GitHub Actions triggers on `v*` tags and builds the `.alfredworkflow` bundle
 
 ## References
 
 - [Seerr API](https://api-docs.overseerr.dev/)
 - [Alfred Script Filter JSON](https://www.alfredapp.com/help/workflows/inputs/script-filter/json/)
 - [JXA Cookbook](https://github.com/JXA-Cookbook/JXA-Cookbook)
-- Seek workflow (SearXNG-Seek-Alfred) - sibling project, same patterns
+- Seek workflow (SearXNG-Seek-Alfred): sibling project, same patterns
