@@ -520,21 +520,20 @@ function search(query) {
 		};
 	}
 
-	// Guard: Empty query
-	if (!query || query.trim() === "") {
+	// Guard: Empty or too-short query (minimum 3 characters)
+	const cleanQuery = (query || "").trim();
+	if (cleanQuery.length < 3) {
 		return {
 			items: [
 				{
-					title: "Search Seerr…",
-					subtitle: "Type a movie or TV show name to search",
+					title: cleanQuery.length === 0 ? "Search Seerr…" : `Type ${3 - cleanQuery.length} more character${3 - cleanQuery.length === 1 ? "" : "s"}…`,
+					subtitle: "Minimum 3 characters to search",
 					valid: false,
 					icon: { path: "icon.png" },
 				},
 			],
 		};
 	}
-
-	const cleanQuery = query.trim();
 
 	// Perform search
 	const response = apiGet("/api/v1/search", {

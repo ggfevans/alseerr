@@ -96,13 +96,13 @@
 				<key>keyword</key>
 				<string>alseerr</string>
 				<key>queuedelaycustom</key>
-				<integer>3</integer>
+				<integer>250</integer>
 				<key>queuedelayimmediatelyinitially</key>
-				<true/>
+				<false/>
 				<key>queuedelaymode</key>
-				<integer>0</integer>
+				<integer>2</integer>
 				<key>queuemode</key>
-				<integer>1</integer>
+				<integer>2</integer>
 				<key>runningsubtext</key>
 				<string>Searching Seerr&#x2026;</string>
 				<key>scriptfile</key>
@@ -141,13 +141,13 @@
 				<key>keyword</key>
 				<string>{var:keyword_shortcut}</string>
 				<key>queuedelaycustom</key>
-				<integer>3</integer>
+				<integer>250</integer>
 				<key>queuedelayimmediatelyinitially</key>
-				<true/>
+				<false/>
 				<key>queuedelaymode</key>
-				<integer>0</integer>
+				<integer>2</integer>
 				<key>queuemode</key>
-				<integer>1</integer>
+				<integer>2</integer>
 				<key>runningsubtext</key>
 				<string>Searching Seerr&#x2026;</string>
 				<key>scriptfile</key>
