@@ -159,15 +159,38 @@ function apiGet(endpoint, params) {
 
 	try {
 		const escapedUrl = shellEscape(url);
-		const curlCmd = `curl --silent --location --max-time ${timeoutSecs} -H "X-Api-Key: ${CONFIG.apiKey}" -- ${escapedUrl}`;
-		const response = app.doShellScript(curlCmd);
+		// Use -w to append HTTP status code after response body, separated by newline
+		const curlCmd = `curl --silent --location --max-time ${timeoutSecs} -w '\\n%{http_code}' -H "X-Api-Key: ${CONFIG.apiKey}" -- ${escapedUrl}`;
+		const raw = app.doShellScript(curlCmd);
 
-		if (!response || response.includes("curl:") || response.includes("Could not resolve")) {
+		if (!raw) {
 			return { success: false, error: "network" };
 		}
 
+		// Split response body from HTTP status code
+		const lastNewline = raw.lastIndexOf("\n");
+		const responseBody = lastNewline > 0 ? raw.substring(0, lastNewline) : raw;
+		const httpStatus = lastNewline > 0 ? Number.parseInt(raw.substring(lastNewline + 1), 10) : 0;
+
+		// Detect HTTP errors
+		if (httpStatus === 401 || httpStatus === 403) {
+			return { success: false, error: "auth" };
+		}
+		if (httpStatus >= 500) {
+			return { success: false, error: "server" };
+		}
+		if (httpStatus !== 0 && (httpStatus < 200 || httpStatus >= 400)) {
+			return { success: false, error: "http", status: httpStatus };
+		}
+
+		// Detect HTML responses (wrong endpoint, reverse proxy error page, etc.)
+		const trimmed = responseBody.trimStart();
+		if (trimmed.startsWith("<!") || trimmed.startsWith("<html") || trimmed.startsWith("<HTML")) {
+			return { success: false, error: "html" };
+		}
+
 		try {
-			const data = JSON.parse(response);
+			const data = JSON.parse(responseBody);
 			return { success: true, data: data };
 		} catch {
 			return { success: false, error: "parse" };
@@ -404,10 +427,10 @@ function resultToAlfredItem(result) {
 		mediaStatus: result.mediaInfo ? result.mediaInfo.status : 0,
 	});
 
-	// Alt subtitle changes based on current status
-	let altSubtitle = "⌥: Request this";
+	// Alt subtitle changes based on current status and media type
+	let altSubtitle = isMovie ? "⌥: Request movie" : "⌥: Request all seasons";
 	if (result.mediaInfo && result.mediaInfo.status >= 3) {
-		altSubtitle = "⌥: Already available";
+		altSubtitle = isMovie ? "⌥: Already available" : "⌥: Already available/processing";
 	} else if (result.mediaInfo && result.mediaInfo.status === 2) {
 		altSubtitle = "⌥: Already pending";
 	}
@@ -510,15 +533,32 @@ function search(query) {
 		language: "en",
 	});
 
-	// Guard: Network error
+	// Guard: API errors with specific messages
 	if (!response.success) {
+		let errorTitle = "⚠️ Cannot reach Seerr";
+		let errorSubtitle = "Check your connection and Seerr URL";
+
+		if (response.error === "auth") {
+			errorTitle = "⚠️ Authentication failed";
+			errorSubtitle = "Check your API key in workflow settings";
+		} else if (response.error === "server") {
+			errorTitle = "⚠️ Seerr server error";
+			errorSubtitle = "Seerr returned a 5xx error — is it healthy?";
+		} else if (response.error === "html") {
+			errorTitle = "⚠️ Unexpected response";
+			errorSubtitle = "Got HTML instead of JSON — check your Seerr URL";
+		} else if (response.error === "parse") {
+			errorTitle = "⚠️ Invalid response";
+			errorSubtitle = "Seerr returned non-JSON data";
+		}
+
 		return {
 			items: [
 				errorItem(
-					"⚠️ Cannot reach Seerr",
-					response.error === "parse" ? "Invalid response from Seerr" : "Check your connection",
+					errorTitle,
+					errorSubtitle,
 					seerrUrl,
-					{ query: cleanQuery, url: seerrUrl, error: response.error }
+					{ query: cleanQuery, url: seerrUrl, error: response.error, status: response.status }
 				),
 			],
 		};
