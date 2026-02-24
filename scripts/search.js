@@ -159,19 +159,21 @@ function apiGet(endpoint, params) {
 
 	try {
 		const escapedUrl = shellEscape(url);
-		// Pipe API key via stdin using curl -K - to keep it out of process listing
+		// Write API key to temp file for curl -K to keep it out of process listing
+		// Using unique marker for HTTP status since doShellScript converts \n to \r
 		const curlConfig = shellEscape(`header = "X-Api-Key: ${CONFIG.apiKey}"`);
-		const curlCmd = `echo ${curlConfig} | curl -K - --silent --location --max-time ${timeoutSecs} -w '\\n%{http_code}' -- ${escapedUrl}`;
+		const curlCmd = `TMPK=$(mktemp) && echo ${curlConfig} > "$TMPK" && curl -K "$TMPK" --silent --location --max-time ${timeoutSecs} -w '__HTTPSTATUS__%{http_code}' -- ${escapedUrl}; S=$?; rm -f "$TMPK"; exit $S`;
 		const raw = app.doShellScript(curlCmd);
 
 		if (!raw) {
 			return { success: false, error: "network" };
 		}
 
-		// Split response body from HTTP status code
-		const lastNewline = raw.lastIndexOf("\n");
-		const responseBody = lastNewline > 0 ? raw.substring(0, lastNewline) : raw;
-		const httpStatus = lastNewline > 0 ? Number.parseInt(raw.substring(lastNewline + 1), 10) : 0;
+		// Split response body from HTTP status marker
+		// (doShellScript converts \n→\r, so we use a unique text marker instead)
+		const statusIdx = raw.lastIndexOf("__HTTPSTATUS__");
+		const responseBody = statusIdx > 0 ? raw.substring(0, statusIdx) : raw;
+		const httpStatus = statusIdx > 0 ? Number.parseInt(raw.substring(statusIdx + 14), 10) : 0;
 
 		// Detect HTTP errors
 		if (httpStatus === 401 || httpStatus === 403) {
@@ -215,9 +217,9 @@ function apiPost(endpoint, body) {
 	try {
 		const escapedUrl = shellEscape(url);
 		const escapedBody = shellEscape(JSON.stringify(body));
-		// Pipe API key via stdin using curl -K - to keep it out of process listing
+		// Write API key to temp file for curl -K to keep it out of process listing
 		const curlConfig = shellEscape(`header = "X-Api-Key: ${CONFIG.apiKey}"`);
-		const curlCmd = `echo ${curlConfig} | curl -K - --silent --location --max-time ${timeoutSecs} -X POST -H "Content-Type: application/json" -d ${escapedBody} -- ${escapedUrl}`;
+		const curlCmd = `TMPK=$(mktemp) && echo ${curlConfig} > "$TMPK" && curl -K "$TMPK" --silent --location --max-time ${timeoutSecs} -X POST -H "Content-Type: application/json" -d ${escapedBody} -- ${escapedUrl}; S=$?; rm -f "$TMPK"; exit $S`;
 		const response = app.doShellScript(curlCmd);
 
 		if (!response) {
