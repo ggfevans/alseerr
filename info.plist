@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>bundleid</key>
-	<string>com.ggfevans.alseerr</string>
+	<string>ca.gvns.alseerr</string>
 	<key>category</key>
 	<string>Tools</string>
 	<key>connections</key>
@@ -69,7 +69,7 @@
 		</array>
 	</dict>
 	<key>createdby</key>
-	<string>ggfevans</string>
+	<string>Gareth Evans</string>
 	<key>description</key>
 	<string>Search and request media via Seerr</string>
 	<key>disabled</key>
