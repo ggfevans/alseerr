@@ -1,6 +1,6 @@
 {
 	"name": "alseerr",
-	"version": "0.1.0",
+	"version": "2026.02.24",
 	"private": true,
 	"description": "Seerr media search and requests for Alfred: discover, request, and track media from your homelab",
 	"scripts": {
