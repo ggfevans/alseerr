@@ -12,16 +12,6 @@
 		<array>
 			<dict>
 				<key>destinationuid</key>
-				<string>A3000003-OPEN-SEER-WBUI-000000000003</string>
-				<key>modifiers</key>
-				<integer>0</integer>
-				<key>modifiersubtext</key>
-				<string></string>
-				<key>vitoclose</key>
-				<false/>
-			</dict>
-			<dict>
-				<key>destinationuid</key>
 				<string>A2000002-RQST-SCRP-ACTN-000000000002</string>
 				<key>modifiers</key>
 				<integer>524288</integer>
@@ -30,9 +20,6 @@
 				<key>vitoclose</key>
 				<false/>
 			</dict>
-		</array>
-		<key>A5000005-SRCH-FLTR-SHRT-000000000005</key>
-		<array>
 			<dict>
 				<key>destinationuid</key>
 				<string>A3000003-OPEN-SEER-WBUI-000000000003</string>
@@ -40,16 +27,6 @@
 				<integer>0</integer>
 				<key>modifiersubtext</key>
 				<string></string>
-				<key>vitoclose</key>
-				<false/>
-			</dict>
-			<dict>
-				<key>destinationuid</key>
-				<string>A2000002-RQST-SCRP-ACTN-000000000002</string>
-				<key>modifiers</key>
-				<integer>524288</integer>
-				<key>modifiersubtext</key>
-				<string>Request this</string>
 				<key>vitoclose</key>
 				<false/>
 			</dict>
@@ -59,6 +36,29 @@
 			<dict>
 				<key>destinationuid</key>
 				<string>A4000004-OPEN-RQST-RSLT-000000000004</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>A5000005-SRCH-FLTR-SHRT-000000000005</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>A2000002-RQST-SCRP-ACTN-000000000002</string>
+				<key>modifiers</key>
+				<integer>524288</integer>
+				<key>modifiersubtext</key>
+				<string>Request this</string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>A3000003-OPEN-SEER-WBUI-000000000003</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
@@ -81,6 +81,50 @@
 		<dict>
 			<key>config</key>
 			<dict>
+				<key>browser</key>
+				<string></string>
+				<key>skipqueryencode</key>
+				<false/>
+				<key>skipvarencode</key>
+				<false/>
+				<key>spaces</key>
+				<string></string>
+				<key>url</key>
+				<string>{query}</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.openurl</string>
+			<key>uid</key>
+			<string>A4000004-OPEN-RQST-RSLT-000000000004</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>0</integer>
+				<key>script</key>
+				<string></string>
+				<key>scriptargtype</key>
+				<integer>0</integer>
+				<key>scriptfile</key>
+				<string>scripts/request.js</string>
+				<key>type</key>
+				<integer>8</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>A2000002-RQST-SCRP-ACTN-000000000002</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
 				<key>alfredfiltersresults</key>
 				<false/>
 				<key>alfredfiltersresultsmatchmode</key>
@@ -96,7 +140,7 @@
 				<key>keyword</key>
 				<string>alseerr</string>
 				<key>queuedelaycustom</key>
-				<integer>250</integer>
+				<integer>10</integer>
 				<key>queuedelayimmediatelyinitially</key>
 				<false/>
 				<key>queuedelaymode</key>
@@ -104,7 +148,11 @@
 				<key>queuemode</key>
 				<integer>2</integer>
 				<key>runningsubtext</key>
-				<string>Searching Seerr&#x2026;</string>
+				<string>Searching Seerr…</string>
+				<key>script</key>
+				<string></string>
+				<key>scriptargtype</key>
+				<integer>0</integer>
 				<key>scriptfile</key>
 				<string>scripts/search.js</string>
 				<key>subtext</key>
@@ -141,7 +189,7 @@
 				<key>keyword</key>
 				<string>{var:keyword_shortcut}</string>
 				<key>queuedelaycustom</key>
-				<integer>250</integer>
+				<integer>10</integer>
 				<key>queuedelayimmediatelyinitially</key>
 				<false/>
 				<key>queuedelaymode</key>
@@ -149,7 +197,11 @@
 				<key>queuemode</key>
 				<integer>2</integer>
 				<key>runningsubtext</key>
-				<string>Searching Seerr&#x2026;</string>
+				<string>Searching Seerr…</string>
+				<key>script</key>
+				<string></string>
+				<key>scriptargtype</key>
+				<integer>0</integer>
 				<key>scriptfile</key>
 				<string>scripts/search.js</string>
 				<key>subtext</key>
@@ -171,57 +223,21 @@
 		<dict>
 			<key>config</key>
 			<dict>
-				<key>concurrently</key>
-				<false/>
-				<key>escaping</key>
-				<integer>0</integer>
-				<key>scriptfile</key>
-				<string>scripts/request.js</string>
-				<key>type</key>
-				<integer>8</integer>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.action.script</string>
-			<key>uid</key>
-			<string>A2000002-RQST-SCRP-ACTN-000000000002</string>
-			<key>version</key>
-			<integer>2</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
 				<key>browser</key>
 				<string></string>
+				<key>skipqueryencode</key>
+				<false/>
+				<key>skipvarencode</key>
+				<false/>
 				<key>spaces</key>
 				<string></string>
 				<key>url</key>
 				<string>{query}</string>
-				<key>utf8</key>
-				<true/>
 			</dict>
 			<key>type</key>
 			<string>alfred.workflow.action.openurl</string>
 			<key>uid</key>
 			<string>A3000003-OPEN-SEER-WBUI-000000000003</string>
-			<key>version</key>
-			<integer>1</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>browser</key>
-				<string></string>
-				<key>spaces</key>
-				<string></string>
-				<key>url</key>
-				<string>{query}</string>
-				<key>utf8</key>
-				<true/>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.action.openurl</string>
-			<key>uid</key>
-			<string>A4000004-OPEN-RQST-RSLT-000000000004</string>
 			<key>version</key>
 			<integer>1</integer>
 		</dict>
@@ -262,13 +278,6 @@ Search and request media from your Seerr instance, directly from Alfred.
 			<key>ypos</key>
 			<real>200</real>
 		</dict>
-		<key>A5000005-SRCH-FLTR-SHRT-000000000005</key>
-		<dict>
-			<key>xpos</key>
-			<real>100</real>
-			<key>ypos</key>
-			<real>350</real>
-		</dict>
 		<key>A2000002-RQST-SCRP-ACTN-000000000002</key>
 		<dict>
 			<key>xpos</key>
@@ -289,6 +298,13 @@ Search and request media from your Seerr instance, directly from Alfred.
 			<real>660</real>
 			<key>ypos</key>
 			<real>200</real>
+		</dict>
+		<key>A5000005-SRCH-FLTR-SHRT-000000000005</key>
+		<dict>
+			<key>xpos</key>
+			<real>100</real>
+			<key>ypos</key>
+			<real>350</real>
 		</dict>
 	</dict>
 	<key>userconfigurationconfig</key>
