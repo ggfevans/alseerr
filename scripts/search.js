@@ -413,9 +413,11 @@ function resultToAlfredItem(result) {
 	}
 
 	return {
+		uid: `${result.mediaType}-${tmdbId}`,
 		title: year ? `${title} (${year})` : title,
 		subtitle: subtitle,
 		arg: seerrWebUrl,
+		autocomplete: title,
 		icon: { path: iconPath },
 		quicklookurl: seerrWebUrl,
 		match: alfredMatcher(title),
