@@ -12,7 +12,7 @@
 		<array>
 			<dict>
 				<key>destinationuid</key>
-				<string>A2000002-RQST-SCRP-ACTN-000000000002</string>
+				<string>A3000003-OPEN-SEER-WBUI-000000000003</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
@@ -22,11 +22,11 @@
 			</dict>
 			<dict>
 				<key>destinationuid</key>
-				<string>A3000003-OPEN-SEER-WBUI-000000000003</string>
+				<string>A2000002-RQST-SCRP-ACTN-000000000002</string>
 				<key>modifiers</key>
 				<integer>524288</integer>
 				<key>modifiersubtext</key>
-				<string>Open in Seerr</string>
+				<string>Request this</string>
 				<key>vitoclose</key>
 				<false/>
 			</dict>
@@ -35,7 +35,7 @@
 		<array>
 			<dict>
 				<key>destinationuid</key>
-				<string>A2000002-RQST-SCRP-ACTN-000000000002</string>
+				<string>A3000003-OPEN-SEER-WBUI-000000000003</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
@@ -45,11 +45,11 @@
 			</dict>
 			<dict>
 				<key>destinationuid</key>
-				<string>A3000003-OPEN-SEER-WBUI-000000000003</string>
+				<string>A2000002-RQST-SCRP-ACTN-000000000002</string>
 				<key>modifiers</key>
 				<integer>524288</integer>
 				<key>modifiersubtext</key>
-				<string>Open in Seerr</string>
+				<string>Request this</string>
 				<key>vitoclose</key>
 				<false/>
 			</dict>
@@ -195,7 +195,7 @@
 				<key>spaces</key>
 				<string></string>
 				<key>url</key>
-				<string>{var:seerrWebUrl}</string>
+				<string>{query}</string>
 				<key>utf8</key>
 				<true/>
 			</dict>
@@ -241,8 +241,10 @@ Search and request media from your Seerr instance, directly from Alfred.
 ### Usage
 
 - Type `alseerr {query}` (or your shortcut keyword) to search for movies and TV shows
-- Press **Enter** to request the selected item (or open in Seerr if already available)
-- Press **Alt+Enter** to open the item in Seerr web UI
+- Press **Enter** to open the item in Seerr web UI
+- Press **Alt+Enter** to request the item
+- Press **Cmd+C** to copy the Seerr URL
+- Press **Cmd+L** for full details in Large Type
 
 ### Status Icons
 

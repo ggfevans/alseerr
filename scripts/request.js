@@ -1,7 +1,7 @@
 #!/usr/bin/env osascript -l JavaScript
 
 // Alseerr - Request Action
-// Submits a media request to Seerr when user selects a search result
+// Submits a media request to Seerr when user presses Alt+Enter
 
 ObjC.import("stdlib");
 
@@ -39,20 +39,40 @@ const CONFIG = {
 
 function run(argv) {
 	const seerrUrl = CONFIG.seerrUrl.replace(/\/+$/, "");
-	const mediaType = getEnv("mediaType");
-	const mediaId = getEnv("mediaId");
-	const mediaTitle = getEnv("mediaTitle");
-	const mediaStatus = Number.parseInt(getEnv("mediaStatus", "0"), 10);
 
-	// If already available (status 5) or processing (status 3), open in Seerr
+	// Parse the request payload from arg (passed via alt modifier)
+	let payload;
+	try {
+		payload = JSON.parse(argv[0]);
+	} catch (e) {
+		app.displayNotification("Invalid request data", {
+			withTitle: "Alseerr",
+			subtitle: "Request failed",
+		});
+		return "";
+	}
+
+	const mediaType = payload.mediaType;
+	const mediaId = payload.mediaId;
+	const mediaTitle = payload.mediaTitle || "Unknown";
+	const mediaStatus = payload.mediaStatus || 0;
+	const webUrl = `${seerrUrl}/${mediaType === "movie" ? "movie" : "tv"}/${mediaId}`;
+
+	// If already available or processing, just open in Seerr
 	if (mediaStatus >= 3) {
-		const webUrl = `${seerrUrl}/${mediaType === "movie" ? "movie" : "tv"}/${mediaId}`;
+		app.displayNotification(`${mediaTitle} is already ${mediaStatus === 5 ? "available" : "processing"}`, {
+			withTitle: "Alseerr",
+			subtitle: "No request needed",
+		});
 		return webUrl;
 	}
 
-	// If already pending (status 2), notify and open in Seerr
+	// If already pending, notify
 	if (mediaStatus === 2) {
-		const webUrl = `${seerrUrl}/${mediaType === "movie" ? "movie" : "tv"}/${mediaId}`;
+		app.displayNotification(`${mediaTitle} is already pending approval`, {
+			withTitle: "Alseerr",
+			subtitle: "Request already submitted",
+		});
 		return webUrl;
 	}
 
@@ -68,7 +88,6 @@ function run(argv) {
 		const data = JSON.parse(response);
 
 		if (data.id) {
-			// Success — return the Seerr URL to open in browser
 			app.displayNotification(`Requested: ${mediaTitle}`, {
 				withTitle: "Alseerr",
 				subtitle: `${mediaType === "movie" ? "Movie" : "TV Show"} request submitted`,
@@ -86,6 +105,6 @@ function run(argv) {
 		});
 	}
 
-	// Return Seerr web URL regardless
-	return `${seerrUrl}/${mediaType === "movie" ? "movie" : "tv"}/${mediaId}`;
+	// Return Seerr web URL to open after request
+	return webUrl;
 }

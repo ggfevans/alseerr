@@ -396,16 +396,26 @@ function resultToAlfredItem(result) {
 	// Seerr web URL for this item
 	const seerrWebUrl = `${seerrUrl}/${isMovie ? "movie" : "tv"}/${tmdbId}`;
 
-	// Build request payload as JSON arg for the request action
+	// Request payload for alt action (request via API)
 	const requestPayload = JSON.stringify({
 		mediaType: result.mediaType,
 		mediaId: tmdbId,
+		mediaTitle: title,
+		mediaStatus: result.mediaInfo ? result.mediaInfo.status : 0,
 	});
+
+	// Alt subtitle changes based on current status
+	let altSubtitle = "⌥: Request this";
+	if (result.mediaInfo && result.mediaInfo.status >= 3) {
+		altSubtitle = "⌥: Already available";
+	} else if (result.mediaInfo && result.mediaInfo.status === 2) {
+		altSubtitle = "⌥: Already pending";
+	}
 
 	return {
 		title: year ? `${title} (${year})` : title,
 		subtitle: subtitle,
-		arg: requestPayload,
+		arg: seerrWebUrl,
 		icon: { path: iconPath },
 		quicklookurl: seerrWebUrl,
 		match: alfredMatcher(title),
@@ -422,8 +432,8 @@ function resultToAlfredItem(result) {
 		},
 		mods: {
 			alt: {
-				arg: seerrWebUrl,
-				subtitle: "⌥: Open in Seerr",
+				arg: requestPayload,
+				subtitle: altSubtitle,
 			},
 			cmd: {
 				valid: false,
