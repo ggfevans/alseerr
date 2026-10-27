@@ -3,6 +3,14 @@ name: Alfred Workflow Release
 on:
   push:
     tags: ["v*"]
+  # Rebuild the bundle for an existing tag, e.g. when a tag-triggered run failed
+  # and is too old to re-run from the Actions tab
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing release tag to build and attach the bundle to (e.g. v2026.02.24)"
+        required: true
+        type: string
 
 env:
   WORKFLOW_NAME: ca.gvns.alseerr.alfred
@@ -14,8 +22,23 @@ jobs:
     runs-on: macos-latest
     permissions: { contents: write }
     steps:
+      # A manual run must name an existing release, otherwise the release step
+      # would create a new one (a typo, or a branch name, is not a release tag)
+      - name: Check the tag has a release
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG" --silent \
+            || { echo "::error::Tag '$TAG' does not exist"; exit 1; }
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null \
+            || { echo "::error::No release exists for tag '$TAG'"; exit 1; }
+
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag && format('refs/tags/{0}', inputs.tag) || github.ref }}
 
       - name: Build .alfredworkflow
         run: |
@@ -38,5 +61,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          generate_release_notes: true
+          tag_name: ${{ inputs.tag || github.ref_name }}
+          # Leave the notes of an existing release alone when rebuilding by hand
+          generate_release_notes: ${{ github.event_name == 'push' }}
+          # Fail loudly instead of publishing a release with no download
+          fail_on_unmatched_files: true
           files: ${{ env.WORKFLOW_NAME }}.alfredworkflow
